@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="tester.apps.com.testfirebasejson.MainActivity">
+
+   <include layout="@layout/toolbar"/>
+
+   <RelativeLayout
+       android:layout_width="match_parent"
+       android:padding="16dp"
+       android:layout_height="wrap_content">
+      <EditText
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:id="@+id/et_msg"
+          android:layout_alignParentBottom="true"
+          android:layout_alignParentLeft="true"
+          android:layout_alignParentStart="true"
+          android:layout_toLeftOf="@+id/btn_send"
+          android:layout_toStartOf="@+id/btn_send"
+          tools:ignore="RtlHardcoded" />
+
+      <Button
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Add Chat"
+          android:id="@+id/btn_send"
+          android:layout_alignParentBottom="true"
+          android:layout_alignParentRight="true"
+          android:layout_alignParentEnd="true"
+          tools:ignore="RtlHardcoded" />
+      <ListView
+          android:id="@+id/ListView"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_alignParentTop="true"
+          android:layout_alignParentLeft="true"
+          android:layout_alignParentStart="true"
+          android:layout_above="@+id/et_msg"
+          tools:ignore="RtlHardcoded" />
+
+   </RelativeLayout>
+
+
+
+</LinearLayout>
