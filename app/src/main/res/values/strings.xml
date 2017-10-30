@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">TestFirebaseJson</string>
+    <string name="register_here">SingUp for account chatting, <u>here!!!</u></string>
+    <string name="login_here">Account already, <u>login here!!!</u></string>
+    <string name="logout">Logout</string>
+    <string name="are_you_sure">Serius mau keluar</string>
+    <string name="cancel">cencel</string>
 </resources>

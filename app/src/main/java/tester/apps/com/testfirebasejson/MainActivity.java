@@ -1,16 +1,20 @@
 package tester.apps.com.testfirebasejson;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,9 +30,10 @@ import java.util.Set;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import tester.apps.com.testfirebasejson.base.BaseActivity;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends BaseActivity {
 
     private static final String TAG = "MainActivity";
 
@@ -43,11 +48,19 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> list_of_chat = new ArrayList<>();
     private String name;
 
+//    private FirebaseAuth mAuth;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
+        bind(R.layout.activity_main);
+        initToolbar("Chat Juke");
+
+//        if (mAuth.getCurrentUser() != null){
+//            Intent in = new Intent(getApplicationContext(), MainActivity.class);
+//            startActivity(in);
+//        }
 
         arrayAdapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,list_of_chat);
 
@@ -63,7 +76,40 @@ public class MainActivity extends AppCompatActivity {
         onClickButtonSend();
         getRoot();
         listFriends();
-        request_user_name();
+//        request_user_name();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_logout, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.action_logout :
+                logout();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void logout(){
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.logout)
+                .setMessage(R.string.are_you_sure)
+                .setPositiveButton(R.string.logout, (dialog, which) -> {
+                    dialog.dismiss();
+                    FirebaseAuth.getInstance().signOut();
+                    finish();
+                    Intent in = new Intent(getApplicationContext(),LoginActivity.class);
+                    startActivity(in);
+                })
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .show();
     }
 
     private void onClickButtonSend(){

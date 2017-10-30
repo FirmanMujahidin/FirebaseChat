@@ -1,9 +1,15 @@
 package tester.apps.com.testfirebasejson;
 
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
+import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.AppCompatEditText;
+import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -11,78 +17,136 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
+import butterknife.BindView;
 import tester.apps.com.testfirebasejson.base.BaseActivity;
 import tester.apps.com.testfirebasejson.model.User;
 
-public class LoginActivity extends BaseActivity {
+public class LoginActivity extends BaseActivity{
+
     private static final String TAG = "LoginActivity";
+
+
+    @BindView(R.id.et_email_login)
+    AppCompatEditText etEmailLogin;
+    @BindView(R.id.et_password_login)
+    AppCompatEditText etPasswordLogin;
+    @BindView(R.id.btn_login)
+    Button btnLogin;
+    @BindView(R.id.tv_register)
+    TextView tvRegister;
 
     private FirebaseAuth mAuth;
 
+    private ProgressDialog mProgressDialog;
+
     private String email;
     private String password;
+    private Object user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         bind(R.layout.activity_login);
+
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        Log.d(TAG, "userLogin" +currentUser.getEmail());
-        Log.d(TAG, "userLogin" +currentUser.getUid());
-        User user = new User();
-        user.setEmail("123@gmail.com");
-        user.setPassword("123456");
-        registerUser(user);
+
+        if (mAuth.getCurrentUser() != null){
+            Intent in = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(in);
+        }
+
+
+        btnLogin.setOnClickListener(v -> {
+            User user1 = new User();
+            loginUser(user1);
+        });
+
+        tvRegister.setOnClickListener(v -> {
+            Intent in = new Intent(getApplicationContext(), RegisterActivity.class);
+            startActivity(in);
+            finish();
+        });
+
+        mProgressDialog = new ProgressDialog(this);
+
+
+//        user.setEmail("123@gmail.com");
+//        user.setPassword("123456");
+//        registerUser(user);
     }
 
-    private User loginUser(User user){
-        mAuth.signInWithEmailAndPassword(user.getEmail(), user.getPassword())
+
+
+
+    private User loginUser(User user) {
+//        user.setEmail(etEmailLogin.getText().toString());
+//        user.setPassword(etPasswordLogin.getText().toString());
+        String email = etEmailLogin.getText().toString().trim();
+        String password = etPasswordLogin.getText().toString().trim();
+
+        if (TextUtils.isEmpty(email)){
+            Toast.makeText(getApplicationContext(), "Emal Tidak Boleh Kossong", Toast.LENGTH_SHORT).show();
+            return user;
+        }
+        if (TextUtils.isEmpty(password)){
+            Toast.makeText(getApplicationContext(), "Password Tidak Boleh Kossong", Toast.LENGTH_SHORT).show();
+            return user;
+        }
+
+        mProgressDialog.setMessage("Please wait..");
+        mProgressDialog.show();
+
+        mAuth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener(this, task -> {
+                    mProgressDialog.dismiss();
+                    Log.d(TAG, "onComplete: " + email + "-" + password);
+                    Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
+//                    Log.d(TAG, "getResult" + task.getResult());
+
+                    // If sign in fails, display a message to the user. If sign in succeeds
+                    // the auth state listener will be notified and logic to handle the
+                    // signed in user can be handled in the listener.
+                    if (task.isSuccessful()) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "createUserWithEmail:success");
+                        FirebaseUser user1 = mAuth.getCurrentUser();
+                        Log.d(TAG, "onComplete user: " + user1);
+                        Intent in = new Intent(getApplicationContext(), MainActivity.class);
+                        startActivity(in);
+                        finish();
+
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
+                        Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                    // ...
+                });
+        return user;
+    }
+
+
+    public User registerUser(User user) {
+        mAuth.createUserWithEmailAndPassword(user.getEmail(), user.getPassword())
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        Log.d(TAG, "onComplete: "+ email + "-" + password);
-                        Log.d(TAG, "createUserWithEmail:onComplete:" + task.isSuccessful());
-                        Log.d(TAG, "getResult" + task.getResult());
-
+                        Log.d(TAG, ":onComplete:" + task.isSuccessful());
                         // If sign in fails, display a message to the user. If sign in succeeds
                         // the auth state listener will be notified and logic to handle the
                         // signed in user can be handled in the listener.
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "createUserWithEmail:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Log.d(TAG, "onComplete user: " + user);
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
+                        if (!task.isSuccessful()) {
+                            Log.d(TAG, "createUserFailed" + task.getException());
                         }
-
-                        // ...
+                        task.getResult().getUser().getUid();
                     }
                 });
-        return null;
-    }
-
-    public User registerUser(User user){
-     mAuth.createUserWithEmailAndPassword(user.getEmail(), user.getPassword())
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                Log.d(TAG, ":onComplete:" + task.isSuccessful());
-
-                // If sign in fails, display a message to the user. If sign in succeeds
-                // the auth state listener will be notified and logic to handle the
-                // signed in user can be handled in the listener.
-                if (!task.isSuccessful()) {
-                    Log.d(TAG, "createUserFailed" + task.getException());
-                }
-                task.getResult().getUser().getUid();
-            }
-        });
         return null;
     }
 }
