@@ -136,7 +136,7 @@ public class MainActivity extends BaseActivity {
                 Iterator i = dataSnapshot.getChildren().iterator();
 
                 while (i.hasNext()){
-                    set.add(((DataSnapshot)i.next()).getKey());
+                    set.add(((DataSnapshot)i.next()).child("name").getValue().toString());
 //                    Log.d(TAG, "datas" + ((DataSnapshot)i.next()).getValue());
                 }
 

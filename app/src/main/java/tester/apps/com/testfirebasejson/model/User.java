@@ -5,10 +5,21 @@ package tester.apps.com.testfirebasejson.model;
  */
 
 public class User {
+    private String name;
     private String email;
+    private String password;
+    private String uid;
 
     public String getEmail() {
         return email;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public void setEmail(String email) {
@@ -30,7 +41,4 @@ public class User {
     public void setUid(String uid) {
         this.uid = uid;
     }
-
-    private String password;
-    private String uid;
 }
