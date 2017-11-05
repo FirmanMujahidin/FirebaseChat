@@ -1,18 +1,18 @@
 package tester.apps.com.testfirebasejson;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -25,58 +25,82 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import butterknife.BindView;
-import butterknife.ButterKnife;
+import es.dmoral.toasty.Toasty;
+import tester.apps.com.testfirebasejson.adapter.ListFriendsAdapter;
 import tester.apps.com.testfirebasejson.base.BaseActivity;
+import tester.apps.com.testfirebasejson.model.User;
 
 
 public class MainActivity extends BaseActivity {
 
     private static final String TAG = "MainActivity";
+    @BindView(R.id.recycleListFriend)
+    RecyclerView recycleListFriend;
+    @BindView(R.id.swipeRefreshLayout)
+    SwipeRefreshLayout swipeRefreshLayout;
 
-    @BindView(R.id.et_msg)
-    EditText addRoom;
-    @BindView(R.id.btn_send)
-    Button btnSend;
-    @BindView(R.id.ListView)
-    ListView listView;
     private DatabaseReference root = FirebaseDatabase.getInstance().getReference().child("users");
     private ArrayAdapter<String> arrayAdapter;
     private ArrayList<String> list_of_chat = new ArrayList<>();
+    boolean doubleBackToExitPressedOnce = false;
     private String name;
 
-//    private FirebaseAuth mAuth;
+    private List<User> mUser = new ArrayList<User>();
+
+    private ListFriendsAdapter mFriendsAdapter;
+
+//    private User mUser;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         bind(R.layout.activity_main);
-        initToolbar("Chat Juke");
-
-//        if (mAuth.getCurrentUser() != null){
-//            Intent in = new Intent(getApplicationContext(), MainActivity.class);
-//            startActivity(in);
-//        }
-
-        arrayAdapter = new ArrayAdapter<>(this,android.R.layout.simple_list_item_1,list_of_chat);
-
-        listView.setAdapter(arrayAdapter);
-
-        listView.setOnItemClickListener((adapterView, view, i, l) -> {
-            Intent intent = new Intent(getApplicationContext(),ChatActivity.class);
-            intent.putExtra("addRoom",((TextView)view).getText().toString() );
-            intent.putExtra("user_name",name);
-            startActivity(intent);
-        });
-
-        onClickButtonSend();
+        initToolbar("Chat");
         getRoot();
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext(),LinearLayoutManager.VERTICAL, false);
+
+        recycleListFriend.setLayoutManager(linearLayoutManager);
+        mFriendsAdapter = new ListFriendsAdapter(mUser,this);
+        Log.d(TAG, "after adapter: ");
+        swipeRefreshLayout.setOnRefreshListener(this::getRoot);
+        Log.d(TAG, "onCreate: " + mFriendsAdapter);
+        recycleListFriend.setAdapter(mFriendsAdapter);
+        Toasty.success(getApplicationContext(), "Success!", Toast.LENGTH_SHORT, true).show();
+
+//        arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, list_of_chat);
+
+//        listView.setAdapter(arrayAdapter);
+
+//        listView.setOnItemClickListener((adapterView, view, i, l) -> {
+//            Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+////            intent.putExtra("addRoom",((TextView)view).getText().toString() );
+//            intent.putExtra("user_name", name);
+//            startActivity(intent);
+//        });
+
+//        onClickButtonSend();
         listFriends();
 //        request_user_name();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed();
+            return;
+        }
+
+        this.doubleBackToExitPressedOnce = true;
+        Toast.makeText(getApplicationContext(), "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+
+        new Handler().postDelayed(() -> doubleBackToExitPressedOnce = false, 1000);
     }
 
     @Override
@@ -87,70 +111,77 @@ public class MainActivity extends BaseActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
-            case R.id.action_logout :
+        switch (item.getItemId()) {
+            case R.id.action_logout:
                 logout();
                 break;
         }
         return super.onOptionsItemSelected(item);
     }
 
-    private void logout(){
+    private void logout() {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.logout)
                 .setMessage(R.string.are_you_sure)
                 .setPositiveButton(R.string.logout, (dialog, which) -> {
                     dialog.dismiss();
                     FirebaseAuth.getInstance().signOut();
-                    finish();
-                    Intent in = new Intent(getApplicationContext(),LoginActivity.class);
+                    Intent in = new Intent(MainActivity.this, LoginActivity.class);
                     startActivity(in);
+                    finish();
                 })
-                .setNegativeButton(R.string.cancel, (dialog, which) -> {
-                    dialog.dismiss();
-                })
+                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
                 .show();
     }
 
-    private void onClickButtonSend(){
-        btnSend.setOnClickListener(v -> getRoom());
+    private void onClickButtonSend() {
+//        btnSend.setOnClickListener(v -> getRoom());
     }
 
-    private void getRoom(){
-        Map<String,Object> map = new HashMap<>();
-        map.put(addRoom.getText().toString(),"");
+    private void getRoom() {
+        Map<String, Object> map = new HashMap<>();
+//        map.put(addRoom.getText().toString(),"");
         root.updateChildren(map);
     }
 
-    private void listFriends(){
-        Map<String,Object> map = new HashMap<>();
-        map.put(addRoom.getText().toString(),"");
+    private void listFriends() {
+        Map<String, Object> map = new HashMap<>();
+//        map.put(addRoom.getText().toString(),"");
         root.updateChildren(map);
     }
 
-    private void getRoot(){
+    private void getRoot() {
         root.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Set<String> set = new HashSet<>();
+                Set<String> get = new HashSet<>();
                 Iterator i = dataSnapshot.getChildren().iterator();
 
-                while (i.hasNext()){
-                    set.add(((DataSnapshot)i.next()).child("name").getValue().toString());
-//                    Log.d(TAG, "datas" + ((DataSnapshot)i.next()).getValue());
+                while (i.hasNext()) {
+                    String nama = ((DataSnapshot) i.next()).child("name").getValue().toString().trim();
+                    String email = ((DataSnapshot) i.next()).child("email").getValue().toString().trim();
+                    String uid = ((DataSnapshot) i.next()).child("uid").getValue().toString().trim();
+
+                    get.add(((DataSnapshot) i.next()).child("name").getValue().toString().trim());
+                    Log.d(TAG, "datas" + nama);
+                    User uUser = new User();
+                    uUser.setName(nama);
+                    uUser.setEmail(email);
+                    uUser.setUid(uid);
+                    mUser.add(uUser);
                 }
 
-                list_of_chat.clear();
-                list_of_chat.addAll(set);
+                mUser.clear();
+//                list_of_chat.addAll(get);
 
-                Log.e(TAG, "onDataChange: ");
+                Log.e(TAG, "onDataChange: "+ get);
 
-                arrayAdapter.notifyDataSetChanged();
+                mFriendsAdapter.notifyDataSetChanged();
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-
+                Toast.makeText(MainActivity.this, "Internet Error!!!", Toast.LENGTH_SHORT).show();
             }
         });
     }

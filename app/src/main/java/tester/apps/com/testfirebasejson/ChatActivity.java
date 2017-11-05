@@ -34,7 +34,7 @@ public class ChatActivity extends AppCompatActivity {
     @BindView(R.id.textView)
     TextView textViewChat;
 
-    private String user_name,addRoom;
+    private String user_name;
     private DatabaseReference root ;
     private String temp_key,chat_msg,chat_user_name;;
 
@@ -44,10 +44,10 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
 //        initToolbar("Chat" + addRoom,true);
         user_name = getIntent().getExtras().get("user_name").toString();
-        addRoom = getIntent().getExtras().get("addRoom").toString();
+//        addRoom = getIntent().getExtras().get("addRoom").toString();
 
 
-        root = FirebaseDatabase.getInstance().getReference().child(addRoom);
+        root = FirebaseDatabase.getInstance().getReference().child("user_name");
 
         onClickButtonSend();
 
@@ -68,8 +68,8 @@ public class ChatActivity extends AppCompatActivity {
         DatabaseReference message_root = root.child(temp_key);
         Map<String,Object> map2 = new HashMap<>();
         map2.put("name",user_name);
-        map2.put("msg",edittext_chat_message.getText().toString());
-        edittext_chat_message.setText("");
+//        map2.put("msg",edittext_chat_message.getText().toString());
+//        edittext_chat_message.setText("");
         message_root.updateChildren(map2);
     }
 
