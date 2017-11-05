@@ -35,6 +35,8 @@ import tester.apps.com.testfirebasejson.adapter.ListFriendsAdapter;
 import tester.apps.com.testfirebasejson.base.BaseActivity;
 import tester.apps.com.testfirebasejson.model.User;
 
+import static android.content.ContentValues.TAG;
+
 
 public class MainActivity extends BaseActivity {
 
@@ -62,14 +64,14 @@ public class MainActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         bind(R.layout.activity_main);
         initToolbar("Chat");
-        getRoot();
+        getRoot(0);
 
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getApplicationContext(),LinearLayoutManager.VERTICAL, false);
 
         recycleListFriend.setLayoutManager(linearLayoutManager);
         mFriendsAdapter = new ListFriendsAdapter(mUser,this);
         Log.d(TAG, "after adapter: ");
-        swipeRefreshLayout.setOnRefreshListener(this::getRoot);
+//        swipeRefreshLayout.setOnRefreshListener(this.getRoot(0));
         Log.d(TAG, "onCreate: " + mFriendsAdapter);
         recycleListFriend.setAdapter(mFriendsAdapter);
         Toasty.success(getApplicationContext(), "Success!", Toast.LENGTH_SHORT, true).show();
@@ -150,33 +152,52 @@ public class MainActivity extends BaseActivity {
         root.updateChildren(map);
     }
 
-    private void getRoot() {
+    private void getRoot(final int index) {
         root.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Set<String> get = new HashSet<>();
-                Iterator i = dataSnapshot.getChildren().iterator();
+                Log.d(TAG, "counting "+dataSnapshot.getChildrenCount());
 
-                while (i.hasNext()) {
-                    String nama = ((DataSnapshot) i.next()).child("name").getValue().toString().trim();
-                    String email = ((DataSnapshot) i.next()).child("email").getValue().toString().trim();
-                    String uid = ((DataSnapshot) i.next()).child("uid").getValue().toString().trim();
-
-                    get.add(((DataSnapshot) i.next()).child("name").getValue().toString().trim());
-                    Log.d(TAG, "datas" + nama);
-                    User uUser = new User();
-                    uUser.setName(nama);
-                    uUser.setEmail(email);
-                    uUser.setUid(uid);
-                    mUser.add(uUser);
+                if (dataSnapshot.getChildrenCount() == (index )){
+                    Log.d(TAG, "mUsers" + mUser);
+                    mFriendsAdapter.notifyDataSetChanged();
+                }
+                else{
+                    if (dataSnapshot.getValue() != null) {
+                        Log.d(TAG, "onDataChange: "+ dataSnapshot.getKey());
+                        HashMap mapUserInfo = (HashMap) dataSnapshot.getValue();
+                        User uUser = new User();
+                        uUser.setName((String) mapUserInfo.get("name"));
+                        uUser.setEmail((String) mapUserInfo.get("email"));
+                        uUser.setUid((String) mapUserInfo.get("uid"));
+                        mUser.add(uUser);
+                    }
+                    getRoot(index + 1);
                 }
 
-                mUser.clear();
-//                list_of_chat.addAll(get);
+//                Set<String> get = new HashSet<>();
+//                Iterator i = dataSnapshot.getChildren().iterator();
+//
+//                while (i.hasNext()) {
+//                    String nama = ((DataSnapshot) i.next()).child("name").getValue().toString().trim();
+//                    String email = ((DataSnapshot) i.next()).child("email").getValue().toString().trim();
+//                    String uid = ((DataSnapshot) i.next()).child("uid").getValue().toString().trim();
+//
+//                    get.add(((DataSnapshot) i.next()).child("name").getValue().toString().trim());
+//                    Log.d(TAG, "datas" + nama);
+//                    User uUser = new User();
+//                    uUser.setName(nama);
+//                    uUser.setEmail(email);
+//                    uUser.setUid(uid);
+//                    mUser.add(uUser);
+//                }
+//
+//                mUser.clear();
+////                list_of_chat.addAll(get);
+//
+//                Log.e(TAG, "onDataChange: "+ get);
 
-                Log.e(TAG, "onDataChange: "+ get);
 
-                mFriendsAdapter.notifyDataSetChanged();
             }
 
             @Override
