@@ -128,6 +128,7 @@ public class LoginActivity extends BaseActivity {
                         finish();
                         Intent in = new Intent(getApplicationContext(), MainActivity.class);
                         startActivity(in);
+                        finish();
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "createUserWithEmail:failure", task.getException());

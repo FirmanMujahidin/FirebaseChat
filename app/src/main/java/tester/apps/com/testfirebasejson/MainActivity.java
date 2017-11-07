@@ -71,7 +71,7 @@ public class MainActivity extends BaseActivity {
         recycleListFriend.setLayoutManager(linearLayoutManager);
         mFriendsAdapter = new ListFriendsAdapter(mUser,this);
         Log.d(TAG, "after adapter: ");
-//        swipeRefreshLayout.setOnRefreshListener(this.getRoot(0));
+//        swipeRefreshLayout.setOnRefreshListener();
         Log.d(TAG, "onCreate: " + mFriendsAdapter);
         recycleListFriend.setAdapter(mFriendsAdapter);
         Toasty.success(getApplicationContext(), "Success!", Toast.LENGTH_SHORT, true).show();
@@ -156,24 +156,31 @@ public class MainActivity extends BaseActivity {
         root.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                Log.d(TAG, "counting "+dataSnapshot.getChildrenCount());
+                if (dataSnapshot.getValue() != null){
+                    HashMap mapUserInfo = (HashMap) dataSnapshot.getValue();
 
-                if (dataSnapshot.getChildrenCount() == (index )){
-                    Log.d(TAG, "mUsers" + mUser);
-                    mFriendsAdapter.notifyDataSetChanged();
-                }
-                else{
-                    if (dataSnapshot.getValue() != null) {
-                        Log.d(TAG, "onDataChange: "+ dataSnapshot.getKey());
-                        HashMap mapUserInfo = (HashMap) dataSnapshot.getValue();
+                    for (Object map : mapUserInfo.values()) {
+                        HashMap mapTemp = (HashMap) map;
+                        Log.d(TAG, "mapTemp: " + mapTemp);
+                        String email = mapTemp.get("email").toString();
+                        Log.d(TAG, "emailMap" + email);
+//                        for (Object string : mapTemp.values()) {
+//                            Log.d(TAG, "onDataChange: " + string);
+//                        }
                         User uUser = new User();
-                        uUser.setName((String) mapUserInfo.get("name"));
-                        uUser.setEmail((String) mapUserInfo.get("email"));
-                        uUser.setUid((String) mapUserInfo.get("uid"));
+                        uUser.setName(mapTemp.get("name").toString());
+                        uUser.setEmail(mapTemp.get("email").toString());
+                        uUser.setUid(mapTemp.get("uid").toString());
                         mUser.add(uUser);
                     }
-                    getRoot(index + 1);
+//                    Iterator it = mapUserInfo.entrySet().iterator();
+//                    while (it.hasNext()) {
+//                        Map.Entry pair = (Map.Entry)it.next();
+//                        Log.d(TAG, "hashmapdata: "+pair.getKey() + " = " + pair.getValue());
+//                    }
+                    mFriendsAdapter.notifyDataSetChanged();
                 }
+
 
 //                Set<String> get = new HashSet<>();
 //                Iterator i = dataSnapshot.getChildren().iterator();
@@ -194,10 +201,6 @@ public class MainActivity extends BaseActivity {
 //
 //                mUser.clear();
 ////                list_of_chat.addAll(get);
-//
-//                Log.e(TAG, "onDataChange: "+ get);
-
-
             }
 
             @Override

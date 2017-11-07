@@ -66,7 +66,7 @@ public class ListFriendsAdapter extends RecyclerView.Adapter<ListFriendsAdapter.
         public ViewHolder(View itemView) {
             super(itemView);
 
-            icon_avata = (CircleImageView) itemView.findViewById(R.id.icon_avata);
+//            icon_avata = (CircleImageView) itemView.findViewById(R.id.icon_avata);
             txtName = (TextView) itemView.findViewById(R.id.txtName);
             txtTime = (TextView) itemView.findViewById(R.id.txtMessage);
 
